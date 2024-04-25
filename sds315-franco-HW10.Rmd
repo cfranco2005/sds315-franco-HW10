@@ -1,0 +1,125 @@
+---
+title: "HW10"
+author: "Chris Franco"
+date: "2024-04-25"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE)
+library(tidyverse)
+library(mosaic)
+library(moderndive)
+library(dplyr)
+library(effectsize)
+```
+
+### Problem 1 ###
+```{r}
+redlining <- read_csv("redlining.csv")
+```
+
+```{r}
+lm_redlining = lm(policies ~ minority + fire + age + income, data=redlining)
+
+lm_redlining_minority = lm(policies ~ minority, data=redlining)
+```
+
+The question being asked is to determine if there is an association between the number of FAIR policies and the racial composition of a zip code. We want to find the partial slope that holds other possible confounding variables constant such as income, age of the home, and fires in the neighborhood. 
+
+I first wanted to see the overall relationship between FAIR policies and a pecentage increase in minorities of a zipcode and found that as a zipcode's percentage of minorities increases by 1% the FAIR policies issued per 100 households increased by 0.014. However, this is a naive way to measure a relationship knowing there could be a plethora of confounders. So to properly address this I performed a multiple regression.
+
+```{r}
+get_regression_table(lm_redlining)
+```
+
+The regression table shows the partial relationships broken down amongst the variables of percentage of miorities in a zip code, fires per 100 residents, percent of houses in a zip code built before WWII, and median family income in $1000 of dollars. 
+
+The partial relationships were as follows:
+For a percentage increase in minority composition of a zipcode, there was an 0.008 unit increase in new  or continued FAIR policies per 100 households in a zipcode. 
+For an one unit increase in fires per 100 housing units in a zipcode, there was an 0.022% increase in new or continued FAIR policies per 100 households in a zipcode
+For a percentage increase in houses in a zipcode built before WWII, there was a 0.006 unit decrease increase in new or continued FAIR policies per 100 households in a zipcode. 
+For an increase in an a thousand dollars for the median household income for a zip code, there was a 0.016 unit decrease in new or continued FAIR policies per 100 households in a zipcode. 
+
+After creating a regression model and holding other possible influences constant there was a possible positive association captures between an increase in a zipcode's minority compostion and an increase in FAIR policies per 100 households in a zipcode. However the lower bound strays near zero indicating there might not be a difference based on racial composition of a zip code at all. The fire and income variable seem to play a larger roll in regards to an association between FAIR policies created and mantained.  
+
+
+### Problem 2 ###
+#### Part A #####
+```{r}
+groceries <- read_csv("groceries.csv")
+
+grouped_store_price <- groceries %>%
+  group_by(Store) %>%
+  summarize(avg_value = mean(Price))
+
+
+ggplot(grouped_store_price, aes(x = Store, y = avg_value)) +
+  geom_col() +  # Use geom_col() for a bar plot
+  labs(x = "Store", y = "Average Price ($)") +  
+  coord_flip() + 
+  theme_bw()
+```
+
+From the bar graph, the store with the highest average price for groceries was Whole Foods narrowly beating out Wheatsville Food Co-Op with the store with the lowest average price for groceries was Fiesta. 
+
+#### Part B ####
+```{r}
+grouped_grocery_count <- groceries %>%
+  group_by(Product) %>%
+  summarize(count = n())
+
+ggplot(grouped_grocery_count, aes(x = Product, y = count)) +
+  geom_col() +  # Use geom_col() for a bar plot
+  labs(x = "Product", y = "Count") +  
+  theme_bw() +  # Use the theme_bw() for a black-and-white theme
+  coord_flip()  # Flip x and y axes
+```
+#### Part C ####
+```{r}
+lmgroceries1 <- lm(Price ~ Type + Product, data = groceries)
+
+get_regression_table(lmgroceries1)
+
+```
+
+#### Part D ####
+```{r}
+lmgroceries2 <- lm(Price ~ Store + Product, data = groceries)
+
+get_regression_table(lmgroceries2)
+
+
+```
+
+The two stores that charge the most despite what product they are selling (in the regression table when other stores and products are held constant) are Whole Foods who will charge \$0.36 more and Wheatsville who will charge $0.29 more on average regardless of product. While the two stores that appear to have the lowest prices are Walmart ($0.99) and Kroger Fresh Fare ($0.90)
+
+#### Part E ####
+Based on the regression model from Part D, a price of a product from HEB will decrease by about \$0.65 while a price of a product from Central Market will decrease by a small amount of $0.57. with a difference of about $0.10. This gives light to the theory of price discrimination and Central Market charging more than HEB. 
+
+#### Part F ####
+
+```{r}
+groceries <- groceries %>% 
+  mutate(income10k = Income/1000)
+
+lmgroceries3 <- lm(Price ~ income10k + Product, data = groceries)
+
+get_regression_table(lmgroceries3)
+
+standardize_parameters(lmgroceries3)
+
+```
+An increase in an increment of 10K in the income of a ZIP code seems to be associated with a decrease in $0.001 in the price that consumers in the ZIp code expect to pay for the same product
+
+A one-standard deviation increase in the income of a ZIP code seems to be associated with
+a -0.03 standard-deviation change in the price that consumers in that ZIP code expect to pay for
+the same product
+
+Both the raw numbers and standardized numbers of viewing this relationship both seem to show a weak to no association between people having to pay different prices for their products based on the income of their zip code.
+
+
+
+
